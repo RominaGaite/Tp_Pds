@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";      // Por defecto es root
 $password = "";      // Por defecto no hay contraseña
-$db = "sistema_login"; // Nombre de la base de datos
+$db = "sistemalogin"; // Nombre de la base de datos
 
 // Crear conexión
 $conn = new mysqli($host, $user, $password, $db);
