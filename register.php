@@ -8,30 +8,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
     $perfil = $_POST['profile'];
     
-    // Validaciones de la contraseña
+    // Validar la contraseña
     if (strlen($password) < 8 || !preg_match("/[A-Z]/", $password) || !preg_match("/[a-z]/", $password) || !preg_match("/\d/", $password) || !preg_match("/[@$!%*#?&+]/", $password)) {
         $error = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.";
     } else {
+        // Encriptar la contraseña
         $password_hash = password_hash($password, PASSWORD_BCRYPT);
 
-        // Verificar si el email ya está registrado
-        $stmt = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows > 0) {
-            $error = "El correo ya está registrado.";
-        } else {
-            $stmt = $conn->prepare("INSERT INTO usuarios (nombre_completo, email, fecha_nacimiento, contraseña, perfil) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssss", $nombre_completo, $email, $fecha_nacimiento, $password_hash, $perfil);
-            if ($stmt->execute()) {
-                // Redirigir al usuario a la página de inicio después de registrarse
-                header("Location: index.php");
-                exit(); // Termina el script para asegurar que no se ejecute nada más
+        try {
+            // Ver si el email ya está registrado
+            $stmt = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email = :email");
+            $stmt->bindParam(':email', $email, PDO::PARAM_STR);  // Corregir el tipo de parámetro
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                $error = "El correo ya está registrado.";
             } else {
-                $error = "Error en el registro.";
+                // preparar la consulta a la bd
+                $stmt = $conn->prepare("INSERT INTO usuarios (nombre_completo, email, fecha_nacimiento, contraseña, perfil) 
+                                        VALUES (:nombre_completo, :email, :fecha_nacimiento, :password_hash, :perfil)");
+                
+                // Enlazar los parámetros con los nombres correctos
+                $stmt->bindParam(':nombre_completo', $nombre_completo, PDO::PARAM_STR);
+                $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+                $stmt->bindParam(':fecha_nacimiento', $fecha_nacimiento, PDO::PARAM_STR);
+                $stmt->bindParam(':password_hash', $password_hash, PDO::PARAM_STR);
+                $stmt->bindParam(':perfil', $perfil, PDO::PARAM_STR);
+                
+                // hacer la consulta y ver si esta ok 
+                if ($stmt->execute()) {
+                    header("Location: index.php");
+                    exit();
+                } else {
+                    $error = "Error en el registro.";
+                }
             }
+        } catch (PDOException $e) {
+            $error = "Error en la base de datos: " . $e->getMessage();
         }
     }
 }
@@ -73,4 +87,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </body>
 </html>
-

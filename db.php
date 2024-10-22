@@ -1,14 +1,13 @@
 <?php
 $host = "localhost";
-$user = "root";      // Por defecto es root
-$password = "";      // Por defecto no hay contraseña
-$db = "sistemalogin"; // Nombre de la base de datos
+$db = "sistemalogin";  
+$user = "root";       
+$password = "";        
 
-// Crear conexión
-$conn = new mysqli($host, $user, $password, $db);
-
-// Verificar la conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
+try {
+    $conn = new PDO("mysql:host=$host;dbname=$db", $user, $password);
+     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+       die("Error de conexión: " . $e->getMessage());
 }
 ?>

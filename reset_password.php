@@ -9,18 +9,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Verificar si el correo existe en la base de datos
     $stmt = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email = ?");
-    $stmt->bind_param("s", $email);
+    $stmt->bindParam(1, $email, PDO::PARAM_STR);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $result = $stmt->rowCount();
 
-    if ($result->num_rows > 0) {
+    // Inicializar variables para la alerta
+    $alertTitle = "";
+    $alertText = "";
+    $alertIcon = "";
+    $redirectUrl = "";
+
+    if ($result > 0) {
         // Generar token de restablecimiento
         $token = bin2hex(random_bytes(50));
         $expiracion = date("Y-m-d H:i:s", strtotime('+1 hour'));
 
         // Actualizar la base de datos con el token y la fecha de expiración
         $stmt = $conn->prepare("UPDATE usuarios SET reset_token = ?, reset_token_expiration = ? WHERE email = ?");
-        $stmt->bind_param("sss", $token, $expiracion, $email);
+        $stmt->bindParam(1, $token, PDO::PARAM_STR);
+        $stmt->bindParam(2, $expiracion, PDO::PARAM_STR);
+        $stmt->bindParam(3, $email, PDO::PARAM_STR);
         $stmt->execute();
 
         // Enviar correo electrónico con el enlace de restablecimiento de contraseña
@@ -31,24 +39,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         mail($email, $subject, $message, $headers);
 
-        // Mostrar la alerta de SweetAlert
-        echo "
-        <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-        <script>
-            Swal.fire({
-                title: '¡Correo enviado!',
-                text: 'Hemos enviado un correo para que restablezcas tu contraseña.',
-                icon: 'success',
-                width: '40%', // Tamaño más grande
-                position: 'center', // Centrado
-                showConfirmButton: false, // Ocultar botón de confirmación
-                timer: 3000, // Duración de la alerta (3 segundos)
-                timerProgressBar: true // Mostrar barra de progreso
-            });
-        </script>";
+        // Configurar alerta para correo enviado
+        $alertTitle = '¡Correo enviado!';
+        $alertText = 'Hemos enviado un correo para que restablezcas tu contraseña.';
+        $alertIcon = 'success';
+        $redirectUrl = 'index.php';
     } else {
-        echo "<script>alert('Correo no encontrado.');</script>";
+        // Configurar alerta para correo no encontrado
+        $alertTitle = 'Error';
+        $alertText = 'Correo no encontrado.';
+        $alertIcon = 'error';
+        $redirectUrl = 'reset_password.php';
     }
+
+    // Mostrar la alerta de SweetAlert
+    echo "
+    <!DOCTYPE html>
+    <html lang='es'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <link rel='stylesheet' href='./estilos.css'>
+        <title>Recuperar Contraseña</title>
+        <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+    </head>
+    <body>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    title: '$alertTitle',
+                    text: '$alertText',
+                    icon: '$alertIcon',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '$alertIcon' === 'success' ? '#4CAF50' : '#f44336' 
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location = '$redirectUrl'; 
+                    }
+                });
+            });
+        </script>
+    </body>
+    </html>";
+    exit; // Asegúrate de salir después de mostrar la alerta
 }
 ?>
 
@@ -62,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <div class="login-container">
-    <div class="login-img"></div>
+        <div class="login-img"></div>
         <div class="login-form">
             <h2>Recuperar Contraseña</h2>
             <form action="reset_password.php" method="POST">

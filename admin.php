@@ -6,12 +6,16 @@ if (isset($_GET['eliminar'])) {
     $id_usuario = intval($_GET['eliminar']);
     
     // Obtener el nombre del usuario para la alerta
-    $result_user = $conn->query("SELECT nombre_completo FROM usuarios WHERE id_usuario = $id_usuario");
-    $usuario = $result_user->fetch_assoc();
+    $stmt_user = $conn->prepare("SELECT nombre_completo FROM usuarios WHERE id_usuario = :id_usuario");
+    $stmt_user->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
+    $stmt_user->execute();
+    $usuario = $stmt_user->fetch(PDO::FETCH_ASSOC);
     $nombre_usuario = $usuario['nombre_completo'];
 
     // Eliminar el usuario
-    $conn->query("DELETE FROM usuarios WHERE id_usuario = $id_usuario");
+    $stmt_delete = $conn->prepare("DELETE FROM usuarios WHERE id_usuario = :id_usuario");
+    $stmt_delete->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
+    $stmt_delete->execute();
     
     // Redireccionar a la misma página para evitar el reenvío del formulario
     header("Location: admin.php?eliminado=1&nombre=$nombre_usuario&id=$id_usuario");
@@ -19,7 +23,9 @@ if (isset($_GET['eliminar'])) {
 }
 
 // Obtener todos los usuarios registrados
-$result = $conn->query("SELECT id_usuario, nombre_completo, email, fecha_nacimiento, contraseña, estado, fecha_registro FROM usuarios");
+$stmt = $conn->prepare("SELECT id_usuario, nombre_completo, email, fecha_nacimiento, contraseña, estado, fecha_registro FROM usuarios");
+$stmt->execute();
+$usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -28,13 +34,13 @@ $result = $conn->query("SELECT id_usuario, nombre_completo, email, fecha_nacimie
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./estilos.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Incluyendo SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
     <title>Panel de Administración</title>
 </head>
 <body>
     <div class="containerAdmin">
         <h2>Panel de Administración</h2>
-        <a href="logout.php" class="logout-button">Cerrar Sesión</a> <!-- Botón de cerrar sesión -->
+        <a href="logout.php" class="logout-button">Cerrar Sesión</a> 
         
         <div>
             <table>
@@ -51,7 +57,7 @@ $result = $conn->query("SELECT id_usuario, nombre_completo, email, fecha_nacimie
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <?php foreach ($usuarios as $row): ?>
                         <tr>
                             <td><?php echo $row['id_usuario']; ?></td>
                             <td><?php echo htmlspecialchars($row['nombre_completo']); ?></td>
@@ -66,7 +72,7 @@ $result = $conn->query("SELECT id_usuario, nombre_completo, email, fecha_nacimie
                                 <a href="#" onclick="confirmDelete('<?php echo htmlspecialchars($row['nombre_completo']); ?>', <?php echo $row['id_usuario']; ?>); return false;"><img class="icono" src="https://cdn-icons-png.flaticon.com/128/10221/10221510.png" alt="Eliminar"></a>
                             </td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>

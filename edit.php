@@ -10,15 +10,13 @@ $id_usuario = $_GET['id'];
 
 // Obtener los datos del usuario
 $stmt = $conn->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");
-$stmt->bind_param("i", $id_usuario);
+$stmt->bindParam(1, $id_usuario, PDO::PARAM_INT);
 $stmt->execute();
-$result = $stmt->get_result();
+$usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($result->num_rows == 0) {
+if (!$usuario) {
     die("Usuario no encontrado.");
 }
-
-$usuario = $result->fetch_assoc();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Procesar el formulario de edición
@@ -29,10 +27,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Actualizar el usuario en la base de datos
     $stmt = $conn->prepare("UPDATE usuarios SET nombre_completo = ?, email = ?, fecha_nacimiento = ?, estado = ? WHERE id_usuario = ?");
-    $stmt->bind_param("ssssi", $nombre_completo, $email, $fecha_nacimiento, $estado, $id_usuario);
+    $stmt->bindParam(1, $nombre_completo, PDO::PARAM_STR);
+    $stmt->bindParam(2, $email, PDO::PARAM_STR);
+    $stmt->bindParam(3, $fecha_nacimiento, PDO::PARAM_STR);
+    $stmt->bindParam(4, $estado, PDO::PARAM_STR);
+    $stmt->bindParam(5, $id_usuario, PDO::PARAM_INT);
 
     if ($stmt->execute()) {
-        header("Location: admin.php"); // Redirigir después de la actualización
+        header("Location: admin.php"); 
         exit();
     } else {
         $error = "Error al actualizar el usuario.";

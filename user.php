@@ -7,13 +7,12 @@ if (isset($_GET['id'])) {
 
     // Preparar la consulta para obtener los datos del usuario
     $stmt = $conn->prepare("SELECT nombre_completo, email, fecha_nacimiento, perfil, estado, fecha_registro FROM usuarios WHERE id_usuario = ?");
-    $stmt->bind_param("i", $id_usuario);
+    $stmt->bindParam(1, $id_usuario, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
 
     // Verificar si se encontró el usuario
-    if ($result->num_rows > 0) {
-        $usuario = $result->fetch_assoc();
+    if ($stmt->rowCount() > 0) {
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
     } else {
         // Si no se encuentra el usuario, redirigir o mostrar un error
         header("Location: admin.php"); // O mostrar un mensaje de error
