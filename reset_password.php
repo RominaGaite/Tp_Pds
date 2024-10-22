@@ -31,28 +31,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(3, $email, PDO::PARAM_STR);
         $stmt->execute();
 
-        // Enviar correo electrónico con el enlace de restablecimiento de contraseña
-        $resetLink = "http://localhost/TuProyecto/cambiar_contraseña.php?token=" . $token;
-        $subject = "Restablecer contraseña";
-        $message = "Haz clic en el siguiente enlace para restablecer tu contraseña: " . $resetLink;
-        $headers = "From: no-reply@tuprojecto.com\r\n";
-
-        mail($email, $subject, $message, $headers);
-
         // Configurar alerta para correo enviado
-        $alertTitle = '¡Correo enviado!';
-        $alertText = 'Hemos enviado un correo para que restablezcas tu contraseña.';
+        $alertTitle = 'Correo enviado';
+        $alertText = 'Se ha enviado un correo para restablecer tu contraseña.';
         $alertIcon = 'success';
-        $redirectUrl = 'index.php';
+        $redirectUrl = "simulate_mail.php?token=$token&email=$email"; // Redirigir a la página que simula el correo enviado
     } else {
         // Configurar alerta para correo no encontrado
         $alertTitle = 'Error';
         $alertText = 'Correo no encontrado.';
         $alertIcon = 'error';
-        $redirectUrl = 'reset_password.php';
+        $redirectUrl = 'reset_password.php'; // Redirigir a la misma página en caso de error
     }
 
-    // Mostrar la alerta de SweetAlert
+    // Mostrar la alerta de SweetAlert y redirigir después de 5 segundos
     echo "
     <!DOCTYPE html>
     <html lang='es'>
@@ -71,12 +63,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     text: '$alertText',
                     icon: '$alertIcon',
                     confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '$alertIcon' === 'success' ? '#4CAF50' : '#f44336' 
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location = '$redirectUrl'; 
-                    }
+                    confirmButtonColor: '$alertIcon' === 'success' ? '#4CAF50' : '#f44336'
                 });
+
+                // Redirigir después de 5 segundos (5000 ms)
+                setTimeout(function() {
+                    window.location.href = '$redirectUrl';
+                }, 5000);
             });
         </script>
     </body>
@@ -90,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./estilos.css">
+    <link rel='stylesheet' href='./estilos.css'>
     <title>Recuperar Contraseña</title>
 </head>
 <body>

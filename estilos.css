@@ -125,7 +125,7 @@ thead {
     width: 100vw;
     display: flex;
     height: 100vh;
-    background-color: blueviolet;
+   
 }
 
 .login-img {
@@ -139,7 +139,6 @@ thead {
 .login-form {
     width: 100%;
     display: flex;
-    background-color: #4a6bd8;
     flex-direction: column;
     justify-content: center;
     align-items: center;

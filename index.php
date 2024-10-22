@@ -69,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <button type="submit">Log In</button>
         </form>
 
-        <!-- Enlace para redirigir a la página de recuperación de contraseña -->
+        <!-- si quiere recuperar contraseña -->
         <p><a href="reset_password.php">¿Olvidaste tu contraseña?</a></p>
         <p>¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>
     </div>
